@@ -1,0 +1,25 @@
+# Virtual Environments
+.venv/
+env/
+venv/
+
+# Python Cache & Bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+
+# Data (Strict manual rule: do not commit raw data)
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+
+# IDEs & System Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
