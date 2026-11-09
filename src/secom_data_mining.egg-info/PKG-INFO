@@ -1,0 +1,57 @@
+Metadata-Version: 2.4
+Name: secom-data-mining
+Version: 0.1.0
+Summary: CRISP-DM scaffold for the UCI SECOM semiconductor dataset
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: matplotlib>=3.7
+Requires-Dist: pandas>=2.0
+Requires-Dist: scikit-learn>=1.3
+Requires-Dist: seaborn>=0.13
+Provides-Extra: dev
+Requires-Dist: pytest>=7.4; extra == "dev"
+Requires-Dist: ruff>=0.6; extra == "dev"
+
+# SECOM Data Mining Project
+
+Scaffold for the SECOM semiconductor manufacturing case study. The project follows the
+Advanced CRISP-DM workflow and keeps the held-out test set isolated from preprocessing
+decisions and model fitting.
+
+## Setup
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -e ".[dev]"
+```
+
+Download the SECOM files from the [UCI Machine Learning Repository](https://archive.ics.uci.edu/dataset/179/secom)
+and place them in `data/raw/` as:
+
+- `secom.data`
+- `secom.names`
+- `secom_labels.data`
+
+## Usage
+
+Run the initial descriptive-statistics and stratified-split workflow:
+
+```bash
+python -m secom_analysis.cli --data-dir data/raw --output-dir reports
+```
+
+The command writes machine-readable summaries and figures to `reports/`. Raw data,
+generated reports, notebooks checkpoints, and virtual environments are ignored by Git.
+
+## Project workflow
+
+1. **Week 1:** load the data and calculate descriptive statistics.
+2. **Week 2:** identify missing values and constant features, create a stratified 80/20
+   train/test split, inspect missingness, visualize correlations, and document outlier
+   decisions.
+3. **Week 3:** add imputation and a baseline random-forest model using training data only.
+4. **Week 4:** add Boruta-based feature selection, balancing, and defect-focused evaluation.
+
+The test set is created once and saved separately. Do not use it to choose thresholds,
+features, imputers, or model parameters.
