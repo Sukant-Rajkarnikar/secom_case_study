@@ -1,5 +1,8 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.impute import KNNImputer
+from sklearn.ensemble import RandomForestClassifier
 
 
 # Loading SECOM dataset in real time from UCI repository
@@ -80,9 +83,38 @@ def treat_outliers(X_train, X_test):
     X_test_cleaned = X_test.clip(lower=lower_bound, upper=upper_bound, axis=1)
     return X_train_cleaned, X_test_cleaned
 
+#KNN imputation
+def knn_imputation(X_train, X_test):
+    print("\nPerforming KNN Imputation...")
+
+    scaler = MinMaxScaler()
+    X_train_scaled = pd.DataFrame(scaler.fit_transform(X_train), columns=X_train.columns, index=X_train.index)
+    X_test_scaled = pd.DataFrame(scaler.transform(X_test), columns=X_test.columns, index=X_test.index)
+
+    imputer = KNNImputer(n_neighbors=5)
+    X_train_imputed = pd.DataFrame(imputer.fit_transform(X_train_scaled), columns=X_train.columns, index=X_train.index)
+    X_test_imputed = pd.DataFrame(imputer.transform(X_test_scaled), columns=X_test.columns, index=X_test.index)
+
+    print(f"Missing values remaining in Train: {X_train_imputed.isna().sum().sum()}")
+    print(f"Missing values remaining in Test: {X_test_imputed.isna().sum().sum()}")
+
+    return X_train_imputed, X_test_imputed
+
+def evaluate_baseline(X_train, y_train):
+    print("\nBaseline Random Forest (Pre-Feature Selection)...")
+    
+    rf_baseline = RandomForestClassifier(random_state=42)
+    rf_baseline.fit(X_train, y_train)
+    
+    train_accuracy = rf_baseline.score(X_train, y_train) * 100
+    print(f"Baseline Training Accuracy: {train_accuracy:.2f}%")
+    
+    return rf_baseline
 
 if __name__ == "__main__":
     X, y = load_secom_data()
     X_train, X_test, y_train, y_test = split_training_test_data(X, y)
     X_train_reduced, X_test_reduced = reduce_features(X_train, X_test, y_train)
     X_train_cleaned, X_test_cleaned = treat_outliers(X_train_reduced, X_test_reduced)
+    X_train_imputed, X_test_imputed = knn_imputation(X_train_cleaned, X_test_cleaned)
+    rf_baseline = evaluate_baseline(X_train_imputed, y_train)
