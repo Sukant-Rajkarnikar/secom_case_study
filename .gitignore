@@ -4,6 +4,7 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 .ipynb_checkpoints/
+*.egg-info/
 
 data/raw/*
 !data/raw/.gitkeep
@@ -11,4 +12,3 @@ data/processed/*
 !data/processed/.gitkeep
 reports/*
 !reports/.gitkeep
-
