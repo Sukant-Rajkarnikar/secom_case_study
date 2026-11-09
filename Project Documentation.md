@@ -1,4 +1,4 @@
-# SECOM Case Study – Project Documentation
+## SECOM Case Study – Project Documentation
 
 Fault detection in semiconductor manufacturing using the UCI SECOM
 dataset  
@@ -14,11 +14,11 @@ examiners (traceability of every decision), the project author (single
 reference while writing the notebook and presentation), and any future
 reader who needs to reproduce the analysis.
 
-**Project goal.** Build a reproducible machine-learning pipeline that
+## Project goal.** Build a reproducible machine-learning pipeline that
 predicts, from process sensor data, whether a wafer lot will fail the
 final functionality test, and quantify the economic value of doing so.
 
-**Deliverables required by the course manual**
+## Deliverables required by the course manual
 
 - A reproducible Python script (runs in VS Code, downloads the data at
   runtime, installs missing packages, documents every function in a
@@ -29,7 +29,7 @@ final functionality test, and quantify the economic value of doing so.
 
 - A presentation exported as PDF using the course template.
 
-**Out of scope.** Deployment, real-time monitoring, root-cause analysis
+## Out of scope.** Deployment, real-time monitoring, root-cause analysis
 of individual sensors (sensor names and process steps are anonymised in
 SECOM).
 
@@ -39,38 +39,38 @@ Non-volatile memory (NAND flash) retains data without power and is
 manufactured from ultra-pure silicon derived from quartz sand. The
 process chain relevant to this project is:
 
-1.  **Silicon preparation.** Purification yields polycrystalline silicon
+1.  ## Silicon preparation. Purification yields polycrystalline silicon
     of about 99.9999999 % purity, melted above 1400 °C. The Czochralski
     process draws a single-crystal ingot (typically 300 mm diameter,
     1.5–2 m long, more than 100 kg).
 
-2.  **Wafer production.** Diamond saws slice the ingot into wafers about
+2.  ## Wafer production.** Diamond saws slice the ingot into wafers about
     0.775 mm thick; grinding and polishing make the surface almost
     atomically smooth.
 
-3.  **Layer build-up.** In 3D NAND, dozens to hundreds of alternating
+3.  ## Layer build-up.** In 3D NAND, dozens to hundreds of alternating
     silicon nitride and silicon dioxide layers are deposited (typically
     by chemical vapour deposition). Vertical channels are etched through
     the stack and filled to form the memory cells.
 
-4.  **Photolithography.** Photoresist is applied, exposed to UV light
+4.  ## Photolithography.** Photoresist is applied, exposed to UV light
     through a mask and selectively etched to create horizontal
     structures. The step can be repeated hundreds of times.
 
-5.  **Wafer sort / probe.** Probe needles contact the pads of each die
+5.  ## Wafer sort / probe.** Probe needles contact the pads of each die
     and test electrical performance; defective dies are marked. The
     share of fully functional dies (yield) usually lies between about 70
     % and more than 95 % and depends strongly on process maturity. Newer
     technologies with more layers typically start with lower yield.
 
-**Why prediction matters.** Hundreds of process steps and many sensors
+## Why prediction matters.** Hundreds of process steps and many sensors
 generate data long before the final test. Detecting a probable failure
 early allows engineers to intervene, reduce scrap and limit the cost of
 processing wafers that will fail anyway. Missed failures (Type II
 errors) are more expensive than false alarms (Type I errors) because a
 faulty product continues through costly steps or reaches the customer.
 
-**Mapping of SECOM to the process.** Each SECOM row is one production
+## Mapping of SECOM to the process.** Each SECOM row is one production
 entity (wafer/lot) with 590 sensor-type measurements and one pass/fail
 label from an in-house functionality test, together with a timestamp.
 Sensors and process steps are anonymised, so features cannot be assigned
@@ -88,7 +88,7 @@ to a specific process step above.
 | Missing values | 41 951 NaN cells (about 4.5 % of all cells), concentrated in some columns    |
 | Time span      | 19 July 2008 11:55 to 17 October 2008 06:07; rows are in chronological order |
 
-**Challenges**
+## Challenges**
 
 - Strong class imbalance: a model that always predicts "pass" reaches
   about 93 % accuracy and detects no failure. Accuracy is therefore not
@@ -115,7 +115,7 @@ Deployment is not required.
 
 ### 4.2 Pipeline
 
-**Split → Preprocessing → Feature selection → Balancing → Training →
+## Split → Preprocessing → Feature selection → Balancing → Training →
 Evaluation**
 
 ### 4.3 Governing rules (derived from the course manual)
