@@ -147,14 +147,21 @@ def make_balancer(name: str, seed: int = RANDOM_STATE):
 
 
 def make_model(
-    balancer: str = "smote", seed: int = RANDOM_STATE, n_estimators: int = 500
+    balancer: str = "smote",
+    seed: int = RANDOM_STATE,
+    n_estimators: int = 500,
+    rf_params: dict | None = None,
 ) -> RandomForestClassifier:
-    """Random forest (500 trees); class-weighted only for the "class_weight" option."""
+    """Random forest; class-weighted only for the "class_weight" option.
+
+    ``rf_params``: extra forest settings from the grid search (max_depth, min_samples_leaf, ...).
+    """
     return RandomForestClassifier(
         n_estimators=n_estimators,
         class_weight="balanced" if balancer == "class_weight" else None,
         n_jobs=-1,
         random_state=seed,
+        **(rf_params or {}),
     )
 
 
@@ -166,11 +173,13 @@ def build_pipeline(
     balancer: str = "smote",
     seed: int = RANDOM_STATE,
     n_estimators: int = 500,
+    rf_params: dict | None = None,
 ) -> Pipeline:
     """Full leakage-safe pipeline; every step is refitted on the rows passed to ``fit``.
 
     Inputs: one option per step (all switchable for the grid search): outlier treatment and its
-    σ multiplier, k-NN neighbours, selector ("boruta" or "all"), balancer, forest size.
+    σ multiplier, k-NN neighbours, selector ("boruta" or "all"), balancer, forest size and
+    settings.
     Output: an unfitted ``imblearn`` Pipeline that takes the reduced (uncapped, NaN-containing)
     feature frame.
     """
@@ -183,7 +192,7 @@ def build_pipeline(
             ("selector", BorutaSelector(seed=seed) if selector == "boruta" else "passthrough"),
             ("scaler", MinMaxScaler().set_output(transform="pandas")),
             ("balancer", make_balancer(balancer, seed) or "passthrough"),
-            ("model", make_model(balancer, seed, n_estimators)),
+            ("model", make_model(balancer, seed, n_estimators, rf_params)),
         ]
     )
 
