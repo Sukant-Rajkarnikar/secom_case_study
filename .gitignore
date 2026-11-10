@@ -12,3 +12,10 @@ data/processed/*
 !data/processed/.gitkeep
 reports/*
 !reports/.gitkeep
+
+# local database
+.pgdata/
+.env
+
+# fitted imputers (rebuild with python -m secom_analysis.impute)
+models/

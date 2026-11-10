@@ -4,12 +4,16 @@ import argparse
 import json
 from pathlib import Path
 
-from .data import load_secom, stratified_split
+from .data import load_labels, load_secom, stratified_split
 from .eda import (
+    column_summary,
     constant_features,
+    dataset_overview_table,
     descriptive_statistics,
     remove_features_above_missing_threshold,
+    save_eda_overview,
     save_missingness_plot,
+    write_descriptive_report,
 )
 
 
@@ -45,7 +49,38 @@ def main() -> None:
         json.dumps(summary, indent=2, default=str) + "\n",
         encoding="utf-8",
     )
-    save_missingness_plot(train_features, args.output_dir / "missingness_histogram.png")
+    labels = load_labels(args.data_dir)
+    overview = dataset_overview_table(
+        {
+            "features (full)": features,
+            "labels file": labels,
+            "train features": train_features,
+            "test features": test_features,
+            "train reduced": reduced_features,
+        }
+    )
+    feature_summary = column_summary(features)
+    overview.to_csv(args.output_dir / "dataset_overview.csv")
+    feature_summary.to_csv(args.output_dir / "column_summary.csv")
+    write_descriptive_report(
+        args.output_dir / "descriptive_report.md", overview, feature_summary, labels, target
+    )
+    save_missingness_plot(
+        train_features,
+        args.output_dir / "missingness_histogram.png",
+        threshold=args.missing_threshold,
+    )
+    save_eda_overview(
+        features,
+        target,
+        train_features,
+        train_target,
+        test_target,
+        constants,
+        high_missing,
+        args.missing_threshold,
+        args.output_dir / "eda_overview.png",
+    )
 
 
 if __name__ == "__main__":

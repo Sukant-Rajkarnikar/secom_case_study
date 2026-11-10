@@ -29,3 +29,19 @@ def test_constant_and_missing_feature_reduction() -> None:
     reduced, removed = remove_features_above_missing_threshold(features, 60)
     assert removed == ["mostly_missing"]
     assert list(reduced.columns) == ["constant", "kept"]
+
+
+def test_column_summary_counts_nulls_unique_and_dominant_value() -> None:
+    from secom_analysis.eda import column_summary, dataset_overview_table
+
+    frame = pd.DataFrame({"a": [1.0, 1.0, None, 2.0], "b": [5.0, 5.0, 5.0, 5.0]})
+    summary = column_summary(frame)
+
+    assert summary.loc["a", "null_count"] == 1
+    assert summary.loc["a", "null_pct"] == 25.0
+    assert summary.loc["a", "unique"] == 2
+    assert round(summary.loc["a", "top_value_pct"], 2) == 66.67
+    assert bool(summary.loc["b", "is_constant"])
+    overview = dataset_overview_table({"x": frame})
+    assert overview.loc["x", "null_cells"] == 1
+    assert overview.loc["x", "constant_columns"] == 1
