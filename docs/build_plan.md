@@ -51,7 +51,7 @@ Section numbers (§) refer to the manual's Implementation Guide. Diary IDs (D-NN
 ### Phase D: Outliers (§5)
 | D1 | 3σ bounds per feature from train; flagged counts; top features | Done (D-019) |
 | D2 | All three options described; cap chosen; before/after boxplot; SIP 5.6 | Done (D-019) |
-| D3 | Make the outlier treatment a **switchable transformer** (none / cap / remove→NaN) so the week-7 grid search can vary it | To do |
+| D3 | Make the outlier treatment a **switchable transformer** (none / cap / remove→NaN) so the week-7 grid search can vary it | Done (D-035: `OutlierTreatment` cap / remove / none, σ adjustable) |
 
 ### Phase E: Imputation (§6, week 3)
 | E1 | Recheck NaN count after outlier step | Done |
@@ -68,17 +68,17 @@ Section numbers (§) refer to the manual's Implementation Guide. Diary IDs (D-NN
 | F5 | SIP 7.7 (method, N, tentative handling) | Done in diary (D-033); → notebook |
 
 ### Phase G: Scaling (§8, week 5)
-| G1 | Normality step only if the model needs it (RF: skip, documented; LR/SVM: Yeo-Johnson optional) | To do |
-| G2 | Min-max scaler (week 5) fitted on train; DataFrame with names kept; SIP 8.5 | To do |
+| G1 | Normality step only if the model needs it (RF: skip, documented; LR/SVM: Yeo-Johnson optional) | Done (D-035: 445/450 non-normal; RF → no transform; Yeo-Johnson kept for LR/SVM) |
+| G2 | Min-max scaler (week 5) fitted on train; DataFrame with names kept; SIP 8.5 | Done (D-035: after Boruta, train range [0, 1], names kept); SIP → notebook |
 
 ### Phase H: Imbalance (§9)
-| H1 | Train class counts + majority-class baseline accuracy | To do |
-| H2 | SMOTE (ROSE is R-only; note it), compare with class weighting and ADASYN; counts before/after; SIP 9.6 | To do |
+| H1 | Train class counts + majority-class baseline accuracy | Done (D-035: 1,170 / 83; baseline accuracy 0.934) |
+| H2 | SMOTE (ROSE is R-only; note it), compare with class weighting and ADASYN; counts before/after; SIP 9.6 | Done (D-035: ROSE-style sensitivity 0.289, SMOTE 0.145 at threshold 0.5); SIP → notebook |
 
 ### Phase I: Pipeline (§10)
-| I1 | `imblearn.pipeline.Pipeline`: imputer → selector → scaler → SMOTE → model (rows A–D stay outside, fitted once). Note: §10.3 puts the scaler before selection and §17.1 after it; choose one order and document it | To do |
-| I2 | Shape check, reproducibility check (identical predictions), row-count leakage print | To do |
-| I3 | Single `RANDOM_STATE = 42` for split, SMOTE, model, CV splitter | To do |
+| I1 | `imblearn.pipeline.Pipeline`: imputer → selector → scaler → SMOTE → model (rows A–D stay outside, fitted once). Note: §10.3 puts the scaler before selection and §17.1 after it; choose one order and document it | Done (D-035: selector before scaler, `build_pipeline`) |
+| I2 | Shape check, reproducibility check (identical predictions), row-count leakage print | Done (D-035: `pipeline_checks.json`) |
+| I3 | Single `RANDOM_STATE = 42` for split, SMOTE, model, CV splitter | Done (`RANDOM_STATE = 42` everywhere) |
 | I4 | Q&A 10.6 (five questions) | To do |
 
 ### Phase J: Models and tuning (§11–12, weeks 5–6)
@@ -89,7 +89,7 @@ Section numbers (§) refer to the manual's Implementation Guide. Diary IDs (D-NN
 
 ### Phase K: Evaluation and cost (§13–14, weeks 4, 6, 7)
 | K1 | Define success = detecting a faulty wafer (positive = 1); explain TP/TN/FP/FN and Type I/II | To do |
-| K2 | Accuracy vs baseline, sensitivity, specificity, precision, F1, F2, ROC-AUC, PR curve | To do |
+| K2 | Accuracy vs baseline, sensitivity, specificity, precision, F1, F2, ROC-AUC, PR curve | Partial (D-035: confusion matrices + metrics at threshold 0.5 on CV; curves to do) |
 | K3 | Precision–recall trade-off; threshold choice on **CV predictions** (not test) | To do |
 | K4 | Cost = 100·FP + 400·FN; pick model + threshold with the lowest cost; sensitivity analysis (300/500, and the manual's €200/€5000 variant) | To do |
 | K5 | Q&A 13.6; SIP 14.5 | To do |

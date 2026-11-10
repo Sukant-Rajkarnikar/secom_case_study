@@ -75,7 +75,8 @@ Conventions:
 | D-031 | 2026-11-10 | Business Understanding | Decision | Students Manual read; build plan derived (docs/build_plan.md) | Accepted |
 | D-032 | 2026-11-10 | Data Preparation | Decision | Official imputer: k-NN (k = 5, scaled); median / MICE kept as tested alternatives | Accepted |
 | D-033 | 2026-11-10 | Data Preparation | Experiment | Duplicate check on train, first random forest, Boruta stability selection (450 → 13) | Done |
-| D-032 | 2026-11-10 | Infrastructure | Change | Scaffold overview document (docs/scaffold.md) | Done |
+| D-034 | 2026-11-10 | Infrastructure | Change | Scaffold overview document (docs/scaffold.md) | Done |
+| D-035 | 2026-11-10 | Data Preparation | Experiment | Full pipeline: switchable 3σ step, normality, min-max, balancers, first confusion matrices | Done |
 
 ---
 
@@ -107,6 +108,8 @@ Conventions:
 | D-031 | Rerun the duplicate-column check on X_train and add its SIP row (manual §4.3) | Closed by D-033 (0 duplicates); SIP row still to add to notebook |
 | D-031 | Confirm the manual conflicts: cost 100/400 vs €200/€5000; scaler/selector order; Boruta required | Open |
 | D-033 | Grid search (phase J) must refit Boruta inside each fold and include an "all features" option: the honest in-fold Boruta loses 0.044 PR-AUC vs all 450 | Open |
+| D-035 | Phase K: choose the decision threshold on CV predictions (cost 100/400 implies about 0.2 for calibrated probabilities); at 0.5 no option beats always-pass on cost | Open |
+| D-035 | Notebook 02: normality, min-max, balancing SIP tables and Q&A 10.6 | Open |
 | D-033 | Add notebook 02 sections: duplicate SIP row, first model, Boruta theory (shadow features), SIP 7.7 | Open |
 
 ---
@@ -1323,7 +1326,7 @@ treatment outside the pipeline (§10.2) vs part of the grid search (week 7).
 **Next steps** — See the D-031 rows in Open items; next build step is phase E4 (imputer decision),
 then F (Boruta).
 
-### D-032 · Scaffold overview document
+### D-034 · Scaffold overview document
 - **Date:** 2026-11-10
 - **CRISP-DM phase:** Infrastructure
 - **Type:** Change
@@ -1336,6 +1339,8 @@ and this diary, and introduces no new decisions.
 **What happened** — `python -m pytest -q`: 19 passed.
 **Artifacts** — `docs/scaffold.md`.
 **Next steps** — Update it when a phase changes status.
+
+*Note: first written as D-032, at the same time as the imputer entry D-032; renumbered to D-034 to keep IDs unique.*
 
 ---
 
@@ -1433,3 +1438,97 @@ inside each fold, and an "all features" option should stay in the comparison.
 **Next steps** — Phase G/H: min-max scaling and SMOTE vs class weighting, inside an `imblearn`
 pipeline with Boruta refitted per fold. Notebook 02 sections for this entry.
 
+---
+
+### D-035 · Full pipeline: switchable 3σ step, normality, min-max, balancers, first confusion matrices
+- **Date:** 2026-11-10
+- **CRISP-DM phase:** Data Preparation (feeds Modeling / Evaluation)
+- **Type:** Experiment
+- **Status:** Done
+
+**Context** — Build plan D3, G, H, I and the first part of K (manual §5, §8, §9, §10, §13). Training
+split only, starting from `train_reduced.csv` (1,253 × 450, 83 defective, **not yet capped**), so
+the 3σ step is refitted inside every fold.
+
+**Change** — New `src/secom_analysis/pipeline.py` (`python -m secom_analysis.pipeline`, ≈ 10 min)
+and `tests/test_pipeline.py` (10 tests; 33 pass in total). `build_pipeline(outlier, sigma,
+n_neighbors, selector, balancer, n_estimators)` returns an `imblearn` Pipeline:
+
+`OutlierTreatment (cap | remove→NaN | none, kσ) → k-NN imputer (k=5, scaled) → Boruta | all →
+MinMaxScaler → balancer → RandomForest (500)`
+
+**Pipeline order** — The manual conflicts with itself: §10.3 puts the scaler before selection, and §17.1 puts it after.
+We use **selector before scaler** (§17.1): the k-NN imputer already scales internally for its
+distances, Boruta's forest is scale-invariant, and min-max on the final features keeps the
+scaled set small and readable. Samplers act only during `fit`, so no synthetic row reaches a
+validation fold.
+
+**What happened** (all numbers: training split)
+- **Normality (§8):** 445 of the 450 imputed features reject normality (Shapiro-Wilk p < 0.05), and 223 have
+  |skew| > 1. Yeo-Johnson brings the 13 Boruta features to |skew| ≤ 0.31, but Shapiro still rejects
+  all of them. Random forests split on thresholds, so **no normality transform** is applied. It stays an
+  option for logistic regression / SVM.
+- **Min-max (§8):** fitted on the fold's training rows after selection; range on train exactly [0, 1];
+  column names kept.
+- **Class counts (§9):** 1,170 good / 83 defective; always-pass baseline accuracy 0.934 (recall 0).
+  After resampling: ROSE-style and SMOTE 1,170 / 1,170 (2,340 rows); ADASYN 1,170 / 1,187.
+  ROSE itself is R-only; `RandomOverSampler(shrinkage=1.0)` (smoothed bootstrap) is the
+  Python equivalent.
+- **Pipeline checks (§10.5, first fold):** 1,002 train / 251 validation rows, 0 shared; shapes
+  450 → 450 → 450 → 18 (Boruta) → 18 → 1,872 rows after SMOTE (fit only); 251 predictions returned;
+  identical predictions on refit; test set seal intact.
+- **Balancers** (3×5-fold CV, Boruta refitted per fold: 10–26 features; threshold 0.5):
+
+| Balancer | Sensitivity | Specificity | Precision | F2 | PR-AUC | ROC-AUC | Cost per fold (SD) |
+|---|---|---|---|---|---|---|---|
+| None | 0.008 | 0.998 | 0.089 | 0.010 | 0.172 | 0.675 | 6,627 (205) |
+| Class weights | 0.076 | 0.975 | 0.213 | 0.086 | 0.159 | 0.677 | 6,720 (487) |
+| ROSE-style | **0.289** | 0.895 | 0.166 | **0.249** | **0.192** | 0.697 | 7,180 (722) |
+| SMOTE | 0.145 | 0.943 | 0.157 | 0.144 | 0.153 | 0.692 | 7,013 (628) |
+| ADASYN | 0.145 | 0.938 | 0.144 | 0.142 | 0.157 | 0.688 | 7,140 (738) |
+
+- **Initial confusion matrices** (out-of-fold, CV repeat 1, all 1,253 rows, threshold 0.5):
+
+| Balancer | TP | FN | FP | TN | Accuracy | Cost (100·FP + 400·FN) |
+|---|---|---|---|---|---|---|
+| None | 1 | 82 | 1 | 1,169 | 0.934 | 32,900 |
+| Class weights | 8 | 75 | 20 | 1,150 | 0.924 | 32,000 |
+| ROSE-style | 24 | 59 | 113 | 1,057 | 0.863 | 34,900 |
+| SMOTE | 12 | 71 | 50 | 1,120 | 0.903 | 33,400 |
+| ADASYN | 12 | 71 | 57 | 1,113 | 0.898 | 34,100 |
+
+  Always-pass costs 83 × 400 = **33,200**.
+
+**Interpretation** — At threshold 0.5, **no option beats the always-pass classifier on cost**: each
+extra defect caught costs about 4–5 false alarms. Balancing moves the operating point (ROSE-style triples
+sensitivity vs SMOTE and has the best PR-AUC), but ranking quality is close for all options (ROC-AUC
+0.68–0.70, fold SD ≈ 0.065), and none of these differences is clearly beyond fold noise. The
+threshold, not the balancer, decides the cost. With costs of 100/400 the expected-cost threshold for calibrated
+probabilities is 100 / (100 + 400) = 0.2, so phase K must pick the threshold on CV predictions.
+ROSE-style and SMOTE both go into the grid search; SMOTE stays the default because the manual names it.
+
+**SIP: normality and scaling**
+
+| Options / approaches | Pro and con | Decision made | Consequence |
+|---|---|---|---|
+| No transform | Simple; RF is invariant to monotone transforms / LR, SVM may suffer | **Chosen for RF** | 445/450 features non-normal, left as is |
+| Yeo-Johnson | Fixes skew (13 Boruta features to \|skew\| ≤ 0.31) / not normal anyway (Shapiro), extra fitted step | Option for LR/SVM | — |
+| Min-max (0–1) | Manual's choice, bounded, keeps shape / sensitive to extremes (handled by 3σ cap first) | **Chosen**, after Boruta | Train range [0, 1] |
+| Standardisation | Mean 0, SD 1 / unbounded | Used inside the k-NN imputer only | — |
+
+**SIP: class balancing**
+
+| Options / approaches | Pro and con | Decision made | Consequence |
+|---|---|---|---|
+| None | No synthetic data / model ignores defects | Baseline | Sensitivity 0.008 |
+| Class weights | No new rows / weak effect with RF at 0.5 | Grid option | Sensitivity 0.076 |
+| ROSE-style (smoothed bootstrap) | Simple, manual's ROSE idea / jitter can blur classes | Grid option | Sensitivity 0.289, PR-AUC 0.192 |
+| SMOTE | Manual's default, interpolates neighbours / can create noise in overlap | **Default** | 83 → 1,170 defects in fit; sensitivity 0.145 |
+| ADASYN | Focuses on hard cases / more noise | Grid option | Same as SMOTE, slightly higher cost |
+
+**Artifacts** — `reports/pipeline/` (`report.md`, `normality.png`, `confusion_matrices.png`,
+`normality_all_features.csv`, `resampling_counts.csv`, `cv_folds.csv`, `cv_summary.csv`,
+`confusion_oof.csv`, `pipeline_checks.json`); run log `reports/pipeline_run.log`.
+
+**Next steps** — Phase J grid search over outlier × k × selector (Boruta / all) × balancer × RF
+parameters; phase K threshold choice on CV predictions with cost 100/400; notebook 02.

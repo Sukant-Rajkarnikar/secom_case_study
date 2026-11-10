@@ -30,14 +30,14 @@ SECOM/
 ├── pyproject.toml            # package secom-data-mining, Python ≥3.10, ruff + pytest config
 ├── README.md                 # setup and usage of every command
 ├── src/secom_analysis/       # the package (see Modules)
-├── tests/                    # pytest suite (19 tests)
+├── tests/                    # pytest suite (33 tests)
 ├── notebooks/
 │   └── 01_data_understanding_and_preparation.ipynb
 ├── scripts/db.sh             # local PostgreSQL 16 cluster: init/start/stop/status/psql
 ├── docs/
 │   ├── scaffold.md           # this file
 │   ├── build_plan.md         # course manual → phases A–M with status
-│   ├── scientific_diary.md   # append-only decision log (D-000 … D-032)
+│   ├── scientific_diary.md   # append-only decision log (D-000 … D-035)
 │   └── literature/           # paper review + comparison summary
 ├── data/                     # git-ignored
 │   ├── raw/                  # secom.data, secom_labels.data, secom.names, manual, papers
@@ -63,6 +63,8 @@ SECOM/
 | `impute_cv.py` | Leakage-free downstream CV (3×5-fold, imputer fitted per fold), corrected t-test, time-ordered check | `python -m secom_analysis.impute_cv` |
 | `production.py` | Loads the imputed sets into `secom_production`, keeps the strategy registry, selects a strategy, records CV results | `python -m secom_analysis.production --select/--record-cv` |
 | `split_study.py` | Compares split and validation schemes: hold-outs, repeated CV, time hold-out, forward-chaining, leave-one-month-out | `python -m secom_analysis.split_study` |
+| `selection.py` | Duplicate check on train, first random forest, Boruta stability selection (10 seeds, 450 → 13), ANOVA / RF-importance cross-checks, §7.6 CV | `python -m secom_analysis.selection` |
+| `pipeline.py` | Switchable 3σ outlier step, normality check, min-max scaling, balancers (class weights / ROSE-style / SMOTE / ADASYN), full `imblearn` pipeline, first confusion matrices and cost | `build_pipeline`, `python -m secom_analysis.pipeline` |
 
 Imputation strategies: `median`, `median_flags`, `knn` (scaled, k=5), `mice_bayesridge`, `mice_extratrees`.
 
@@ -96,7 +98,9 @@ python -m secom_analysis.impute
 python -m secom_analysis.impute_cv                                 # ~23 min
 python -m secom_analysis.production --record-cv
 python -m secom_analysis.production --select <strategy>
-python -m pytest -q                                                # 19 passed
+python -m secom_analysis.selection                                 # ~13 min, Boruta
+python -m secom_analysis.pipeline                                  # ~8 min, balancers + confusion matrices
+python -m pytest -q                                                # 33 passed
 ```
 
 ## Key findings so far
@@ -117,25 +121,22 @@ python -m pytest -q                                                # 19 passed
 |---|---|---|
 | A | Data understanding | Mostly done. The script still needs to download the data at runtime |
 | B | Stratified split, test sealed | Done |
-| C | Rough reduction | Done. The duplicate-column check still needs a rerun on X_train |
-| D | Outliers (3σ) | Done. A switchable outlier transformer is still to do |
-| E | Imputation | Candidates are built and compared. **The choice between kNN and median + flags is open (team decision)**. The first RF model is to do |
-| F | Boruta feature selection | To do |
-| G | Min-max scaling | To do |
-| H | Imbalance (SMOTE / class weights / ADASYN) | To do |
-| I | `imblearn` pipeline | To do |
+| C | Rough reduction | Done. Duplicate check on X_train found 0 duplicates (D-033) |
+| D | Outliers (3σ) | Done. Switchable `OutlierTreatment` (cap / remove / none) inside the pipeline (D-035) |
+| E | Imputation | Done. Official imputer is k-NN, k = 5, scaled (D-032). First RF: training accuracy 1.000 vs CV 0.934, recall 0 (D-033) |
+| F | Boruta feature selection | Done. 450 → 13 features with 10-seed stability (D-033). Theory text still to go into the notebook |
+| G | Normality + min-max scaling | Done. No transform for RF; min-max after Boruta (D-035) |
+| H | Imbalance (ROSE-style / SMOTE / ADASYN / class weights) | Done. Compared under CV (D-035) |
+| I | `imblearn` pipeline | Done. `build_pipeline`, checks pass (D-035). Q&A 10.6 still to go into the notebook |
 | J | Models and grid search | To do |
-| K | Evaluation and cost-based threshold | To do |
+| K | Evaluation and cost-based threshold | Partial. First confusion matrices at threshold 0.5 (D-035). Threshold choice to do |
 | L | Final test evaluation | To do |
 | M | Wrap-up, reproducibility, deliverables | To do |
 
 ## Open decisions for the team
 
-- Official imputer: kNN (the manual requires it) or median + flags (D-029)?
 - Cost weights: 100/400 (primary) or €200/€5000 (sensitivity)?
-- Pipeline order: selector before scaler, or scaler before selector?
 - Is Boruta required (the plan says yes, with a target of 15–20 features)?
-- Outlier treatment: inside the grid search as a switchable transformer?
 
 ## Deliverables still to build
 

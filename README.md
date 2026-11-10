@@ -105,6 +105,17 @@ python -m secom_analysis.production --record-cv    # store CV results in the reg
 
 Outputs in `reports/imputation_cv/` (`cv_report.md`, `cv_pr_auc.png`, fold scores, time-ordered check).
 
+## Feature selection & full pipeline
+
+```bash
+python -m secom_analysis.selection   # ~13 min: duplicates, first RF, Boruta (450 → 13) → reports/feature_selection/
+python -m secom_analysis.pipeline    # ~8 min: normality, min-max, balancers, confusion matrices → reports/pipeline/
+```
+
+`pipeline.build_pipeline(outlier, k, selector, balancer)` returns the leakage-safe
+`imblearn` pipeline `3σ outliers → k-NN imputer → Boruta → min-max → balancer → random forest`;
+every step is switchable for the grid search.
+
 ## Notebook & scientific diary
 
 - `notebooks/01_data_understanding_and_preparation.ipynb`: dataset background, target coding,
