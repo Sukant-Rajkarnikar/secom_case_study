@@ -77,6 +77,7 @@ Conventions:
 | D-033 | 2026-11-10 | Data Preparation | Experiment | Duplicate check on train, first random forest, Boruta stability selection (450 → 13) | Done |
 | D-034 | 2026-11-10 | Infrastructure | Change | Scaffold overview document (docs/scaffold.md) | Done |
 | D-035 | 2026-11-10 | Data Preparation | Experiment | Full pipeline: switchable 3σ step, normality, min-max, balancers, first confusion matrices | Done |
+| D-036 | 2026-11-10 | Infrastructure | Change | Audit agent and drift checks: `secom-auditor`, `/audit`, `secom_analysis.audit` | Done |
 
 ---
 
@@ -111,6 +112,10 @@ Conventions:
 | D-035 | Phase K: choose the decision threshold on CV predictions (cost 100/400 implies about 0.2 for calibrated probabilities); at 0.5 no option beats always-pass on cost | Open |
 | D-035 | Notebook 02: normality, min-max, balancing SIP tables and Q&A 10.6 | Open |
 | D-033 | Add notebook 02 sections: duplicate SIP row, first model, Boruta theory (shadow features), SIP 7.7 | Open |
+| D-036 | Rerun `secom_analysis.pipeline` (report predates the last `pipeline.py` edit) and `impute_cv`; then review and accept the first audit baseline | Open |
+| D-036 | Rerun the health report (`reports/health` predates the current `train_reduced.csv`) | Open |
+| D-036 | D-030 entry has no Date/Type/Status block; add it via a superseding note or a metadata fix | Open |
+| D-036 | Reports must say which feature set they mean: stable Boruta 13 vs in-fold Boruta (18 in the first fold) | Open |
 
 ---
 
@@ -1532,3 +1537,58 @@ ROSE-style and SMOTE both go into the grid search; SMOTE stays the default becau
 
 **Next steps** — Phase J grid search over outlier × k × selector (Boruta / all) × balancer × RF
 parameters; phase K threshold choice on CV predictions with cost 100/400; notebook 02.
+
+### D-036 · Audit agent and drift checks: `secom-auditor`, `/audit`, `secom_analysis.audit`
+- **Date:** 2026-11-10
+- **CRISP-DM phase:** Infrastructure
+- **Type:** Change
+- **Status:** Done
+
+**Context** — Results, diary, notebooks and code are now spread over about 15 modules and 36 entries.
+Numbers are quoted in several places, and nothing checked that they still agree or that results
+have not silently moved after a code change.
+
+**Change**
+- `src/secom_analysis/audit.py` (`python -m secom_analysis.audit`): deterministic checks for the test
+  seal, the train/test overlap and row total, column accounting (zero-variance + high-missing + kept =
+  590), 3σ capping of `train_prepared`, selected-feature validity, reads of the sealed test set
+  (and of `secom_raw.csv`, which contains it) in code, course-rule patterns (IQR outlier rule, mean
+  imputation), diary structure (index ↔ log ↔ open items, statuses, dangling IDs), staleness
+  (outputs older than their code or input data), and **drift** against an accepted snapshot
+  `docs/audit_baseline.json`: hashes, every numeric cell of the CV summary tables, preparation
+  state, stable feature set. A metric moving by > 0.01 (absolute for rates, relative for counts) is
+  HIGH; smaller non-zero changes are flagged as possible non-determinism. Output goes to
+  `reports/audit/latest.{md,json}` and `history.csv`. Exit 1 on CRITICAL/HIGH.
+- `tests/test_audit.py` (5 tests; **38 pass in total**).
+- `.claude/agents/secom-auditor.md`: read-only agent that runs the tests and the audit, then
+  cross-checks diary numbers against artifacts, code constants against the diary, and notebooks
+  against reports, and hunts for leakage and reasoning gaps. It returns a ranked alert list and
+  never fixes or accepts a baseline. `/audit [focus]` runs it. `CLAUDE.md` makes it the
+  central testing step.
+
+**Rationale** — Mechanical checks (hashes, counts, ID cross-references) belong in a script that
+gives the same answer every time. Judgement checks (is a 0.02 PR-AUC difference a real win? does
+an entry cite train-only evidence?) belong in the agent. The baseline is tracked in git because
+`reports/` is git-ignored, so accepted numbers are versioned next to the diary.
+
+**What happened** (first run, HEAD 4f0b329): CRITICAL 0 · HIGH 1 · MEDIUM 5 · LOW 7.
+- Test seal intact; 1,253 / 314 rows, no overlap; 116 + 24 + 450 = 590 columns; `train_prepared`
+  fully within its 3σ bounds.
+- HIGH: `reports/health` predates the current `train_reduced.csv`.
+- `reports/pipeline` (D-035 numbers) was written at 14:33, before the last `pipeline.py` edit at
+  14:43, and `reports/imputation_cv` predates `impute_cv.py`. Their numbers are not yet confirmed to
+  come from the current code.
+- Stable Boruta set (13, D-033) ≠ the pipeline's in-fold set in its first fold (18): 3 only in the
+  stable set, 8 only in-fold. Expected (Boruta is refitted per fold), but text must say which.
+- Diary: D-030 has no Date/Type/Status block; D-034 is logged before D-032; D-026 title differs
+  between index and entry.
+- No baseline accepted yet. On purpose: accepting now would freeze possibly stale pipeline
+  numbers.
+
+**Artifacts** — `src/secom_analysis/audit.py`, `tests/test_audit.py`,
+`.claude/agents/secom-auditor.md`, `.claude/skills/audit/SKILL.md`, `CLAUDE.md`,
+`reports/audit/`.
+
+**Next steps** — Rerun `pipeline` and `impute_cv`, review, then
+`python -m secom_analysis.audit --accept-baseline` and commit the baseline; fix the D-030
+metadata; run `/audit` after every change.
