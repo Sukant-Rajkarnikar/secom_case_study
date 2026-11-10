@@ -3,7 +3,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.impute import KNNImputer
 from sklearn.ensemble import RandomForestClassifier
-from plots import plot_low_vola, plot_missingness
+from plots import plot_section2_visualizations, plot_low_vola, plot_missingness
 
 
 # Loading SECOM dataset in real time from UCI repository
@@ -20,6 +20,7 @@ def load_secom_data():
     X.columns = [f"sensor_{i}" for i in range(X.shape[1])]
 
     print(f"\nTotal wafers (rows): {len(X)}")
+    print(f"Total labels (rows): {len(y)}")
     print(f"Total sensors (columns): {len(X.columns)}")
     return X, y
 
@@ -45,9 +46,13 @@ def describe_secom_data(X,y):
     total_missing = X.isna().sum().sum()
     missing_pct_overall = (total_missing / X.size) * 100
     missing_by_feature = (X.isna().mean() * 100).sort_values(ascending=False)
+    missing_by_class = X.isna().sum(axis=1).groupby(y).mean()
     print(f"\nTotal missing cells: {total_missing} ({missing_pct_overall:.2f}% of dataset)")
     print("\nTop 10 Sensors by Missing Percentage (%):")
     print(missing_by_feature.head(10).round(2))
+    print("\nAverage missing sensors per wafer by class (Full Dataset):")
+    print(f"Pass (-1): {missing_by_class[-1]:.2f} | Fail (1): {missing_by_class[1]:.2f}")
+    plot_section2_visualizations(X, y)
     return feature_summary
 
 
