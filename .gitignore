@@ -1,25 +1,21 @@
-# Virtual Environments
 .venv/
-env/
-venv/
-
-# Python Cache & Bytecode
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Jupyter Notebooks
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
 .ipynb_checkpoints/
+*.egg-info/
 
-# Data (Strict manual rule: do not commit raw data)
 data/raw/*
 !data/raw/.gitkeep
 data/processed/*
 !data/processed/.gitkeep
+reports/*
+!reports/.gitkeep
 
-# IDEs & System Files
-.vscode/
-.idea/
-.DS_Store
-Thumbs.db
+# local database
+.pgdata/
+.env
+
+# fitted imputers (rebuild with python -m secom_analysis.impute)
+models/
