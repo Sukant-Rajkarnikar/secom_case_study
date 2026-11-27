@@ -1,0 +1,25 @@
+Hardware: macOS-27.2.1-arm64-arm-64bit-Mach-O | arm | Python 3.13.5
+Team pipeline (inner threshold search: 4 fits per fold, then 1 final fit):
+  fold 0: threshold 0.83  recall 0.059  cost 6,400  fit 12.4s
+  fold 1: threshold 0.54  recall 0.235  cost 6,200  fit 11.2s
+  fold 2: threshold 0.91  recall 0.000  cost 6,800  fit 10.5s
+  fold 3: threshold 0.95  recall 0.000  cost 6,400  fit 13.4s
+  fold 4: threshold 0.84  recall 0.000  cost 6,500  fit 11.7s
+
+Mean (SD) over 5 folds:
+      recall  precision     f2  roc_auc  pr_auc
+mean   0.059      0.429  0.063    0.687   0.170
+std    0.102      0.515  0.106    0.079   0.034
+
+Summed over all 1,253 training wafers:
+tn                     1159.0
+fp                       11.0
+fn                       78.0
+tp                        5.0
+cost                  32300.0
+fit_s                    59.3
+predict_s                 0.9
+threshold_search_s      200.6
+
+Manual decisions encoded: 13
+Features per outer fold: [18, 15, 12, 26, 14]

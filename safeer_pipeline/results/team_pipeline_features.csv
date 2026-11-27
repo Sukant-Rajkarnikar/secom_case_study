@@ -1,0 +1,6 @@
+fold,n_features,features
+0,18,feature_021 feature_031 feature_033 feature_059 feature_064 feature_081 feature_103 feature_124 feature_129 feature_130 feature_205 feature_213 feature_247 feature_333 feature_341 feature_477 feature_488 feature_510
+1,15,feature_014 feature_031 feature_033 feature_059 feature_063 feature_064 feature_065 feature_103 feature_121 feature_122 feature_125 feature_130 feature_213 feature_351 feature_477
+2,12,feature_031 feature_033 feature_059 feature_064 feature_103 feature_130 feature_205 feature_213 feature_377 feature_477 feature_510 feature_577
+3,26,feature_021 feature_031 feature_033 feature_059 feature_064 feature_065 feature_103 feature_129 feature_130 feature_180 feature_183 feature_200 feature_213 feature_250 feature_270 feature_319 feature_323 feature_336 feature_351 feature_388 feature_455 feature_477 feature_510 feature_522 feature_549 feature_552
+4,14,feature_028 feature_031 feature_033 feature_059 feature_065 feature_103 feature_130 feature_182 feature_205 feature_213 feature_341 feature_351 feature_431 feature_477
