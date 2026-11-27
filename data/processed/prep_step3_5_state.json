@@ -1,0 +1,20 @@
+{
+  "random_state": 42,
+  "train_rows": 1253,
+  "train_feature_columns": 450,
+  "defect_rows": 83,
+  "missing_cells_before_knn": 11211,
+  "missing_cells_after_knn": 0,
+  "duplicates_removed": 0,
+  "scaler": "MinMaxScaler",
+  "imputer": "KNNImputer(n_neighbors=5, weights='distance')",
+  "balancer": "SMOTE",
+  "model": "RandomForestClassifier(n_estimators=300)",
+  "test_holdout_sha256": "a5e11d039c4a63be1ae51e0d3205935ae7028492f98c6a9b787606de5a06bf18",
+  "test_holdout_verified": true,
+  "artifacts": {
+    "imputed": "c:\\Users\\LindaAlyAbdellateefA\\Downloads\\SECOM\\secom\\secom_train_imputed.csv",
+    "scaled": "c:\\Users\\LindaAlyAbdellateefA\\Downloads\\SECOM\\secom\\secom_train_scaled.csv",
+    "balanced": "c:\\Users\\LindaAlyAbdellateefA\\Downloads\\SECOM\\secom\\secom_train_balanced.csv"
+  }
+}
